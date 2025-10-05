@@ -16,17 +16,12 @@ def get_sheet():
 
     # VERIFICA SE ESTAMOS NO AMBIENTE DA VERCEL
     # A Vercel define a variável 'VERCEL' automaticamente.
-    if 'VERCEL' in os.environ:
-        # LÓGICA PARA A VERCEL (usa a variável de ambiente)
-        creds_json_str = os.getenv("GOOGLE_CREDENTIALS_JSON")
-        if not creds_json_str:
-            raise Exception("Vercel: Variável GOOGLE_CREDENTIALS_JSON não encontrada.")
-        creds_dict = json.loads(creds_json_str)
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
-    else:
-        # LÓGICA PARA O AMBIENTE LOCAL (usa o arquivo .json)
-        # Certifique-se de que 'credentials.json' está na mesma pasta que app.py
-        creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+    # LÓGICA PARA A VERCEL (usa a variável de ambiente)
+    creds_json_str = os.getenv("GOOGLE_CREDENTIALS_JSON")
+    if not creds_json_str:
+        raise Exception("Vercel: Variável GOOGLE_CREDENTIALS_JSON não encontrada.")
+    creds_dict = json.loads(creds_json_str)
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 
     # O resto da função continua igual
     client = gspread.authorize(creds)
