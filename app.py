@@ -39,7 +39,7 @@ def index():
 def inventario():
     itens_com_linha = []
     try:
-        sheet = get_gsheet()
+        sheet = get_sheet()
         todos_os_valores = sheet.get_all_values()[1:] 
         ultimos_itens = todos_os_valores[-20:] # Aumentei para mostrar os últimos 20, você pode ajustar
         ultimos_itens.reverse()
@@ -68,7 +68,7 @@ def update():
             dados.get('timestamp', datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
         ]
 
-        sheet = get_gsheet()
+        sheet = get_sheet()
         range_para_atualizar = f'A{numero_da_linha}:G{numero_da_linha}'
         sheet.update(range_para_atualizar, [linha_atualizada])
         
@@ -112,7 +112,7 @@ def submit():
 
         # Adiciona todas as linhas na planilha de uma vez (mais eficiente!)
         if linhas_para_adicionar:
-            sheet = get_gsheet()
+            sheet = get_sheet()
             # Usamos append_rows para adicionar múltiplas linhas com uma única requisição à API
             sheet.append_rows(linhas_para_adicionar)
 
