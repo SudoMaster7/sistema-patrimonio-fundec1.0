@@ -14,20 +14,24 @@ def get_sheet():
     scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets',
              "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
 
-    # Pega as credenciais da variável de ambiente
-    creds_json_str = os.getenv("GOOGLE_CREDENTIALS_JSON")
-    if not creds_json_str:
-        raise Exception("Variável de ambiente GOOGLE_CREDENTIALS_JSON não encontrada.")
+    # VERIFICA SE ESTAMOS NO AMBIENTE DA VERCEL
+    # A Vercel define a variável 'VERCEL' automaticamente.
+    if 'VERCEL' in os.environ:
+        # LÓGICA PARA A VERCEL (usa a variável de ambiente)
+        creds_json_str = os.getenv("GOOGLE_CREDENTIALS_JSON")
+        if not creds_json_str:
+            raise Exception("Vercel: Variável GOOGLE_CREDENTIALS_JSON não encontrada.")
+        creds_dict = json.loads(creds_json_str)
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+    else:
+        # LÓGICA PARA O AMBIENTE LOCAL (usa o arquivo .json)
+        # Certifique-se de que 'credentials.json' está na mesma pasta que app.py
+        creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
 
-    # Converte a string JSON em um dicionário Python
-    creds_dict = json.loads(creds_json_str)
-    
-    # Autoriza usando o dicionário de credenciais
-    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+    # O resto da função continua igual
     client = gspread.authorize(creds)
-    
-    # Abre a planilha
-    sheet = client.open("Patrimônio FUNDEC").sheet1 
+    # Lembre-se de usar o nome exato da sua planilha aqui
+    sheet = client.open("Levantamento de Bens - FUNDEC").sheet1 
     return sheet
 
 @app.route('/')
