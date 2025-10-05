@@ -27,7 +27,7 @@ def get_sheet():
     client = gspread.authorize(creds)
     
     # Abre a planilha
-    sheet = client.open("Patrimônio FUNDEC").sheet1 
+    sheet = client.open("Levantamento de Bens - FUNDEC").sheet1 
     return sheet
 
 @app.route('/')
