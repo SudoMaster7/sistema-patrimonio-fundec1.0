@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastro de Itens{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title mb-0">Formulário de Captura de Patrimônio Eletrônico</h3>
+            </div>
+            <div class="card-body">
+                <form action="/submit" method="post">
+                    <div class="mb-3">
+                        <label for="unidade" class="form-label">Unidade</label>
+                        <input type="text" class="form-control" id="unidade" name="unidade" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="categoria" class="form-label">Categoria do Bem</label>
+                        <select class="form-select" id="categoria" name="categoria" required>
+                            <option selected disabled value="">Escolha uma opção...</option>
+                            <option value="Monitor">Monitor</option>
+                            <option value="CPU">CPU</option>
+                            <option value="Teclado e Mouse">Teclado e Mouse</option>
+                            <option value="Estabilizador">Estabilizador</option>
+                            <option value="Switch">Switch</option>
+                            <option value="Roteador">Roteador</option>
+                            <option value="Impressora">Impressora</option>
+                            <option value="Televisão">Televisão</option>
+                            <option value="Projetor">Projetor</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">Descrição do Bem</label>
+                        <textarea class="form-control" id="descricao" name="descricao" rows="3" placeholder="Ex: Computador Dell Optiplex 3080, i5, 8GB RAM..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="marca" class="form-label">Marca do Bem</label>
+                        <input type="text" class="form-control" id="marca" name="marca">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="estado" class="form-label">Estado do Bem</label>
+                        <select class="form-select" id="estado" name="estado" required>
+                            <option selected disabled value="">Escolha uma opção...</option>
+                            <option value="Novo">Novo</option>
+                            <option value="Seminovo">Seminovo</option>
+                            <option value="Inservível">Inservível</option>
+                        </select>
+                    </div>
+
+                    <hr>
+                    <h5 class="mt-4">Cadastro em Lote</h5>
+
+                    <div class="mb-3">
+                        <label for="quantidade" class="form-label">Quantidade de Itens Similares</label>
+                        <input type="number" class="form-control" id="quantidade" name="quantidade" value="1" min="1" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Os números de série são iguais para todos os itens?</label>
+                        <div>
+                            <input type="radio" class="form-check-input" id="serial_sim" name="serial_igual" value="sim" checked>
+                            <label class="form-check-label" for="serial_sim">Sim</label>
+                        </div>
+                        <div>
+                            <input type="radio" class="form-check-input" id="serial_nao" name="serial_igual" value="nao">
+                            <label class="form-check-label" for="serial_nao">Não</label>
+                        </div>
+                    </div>
+                    
+                    <div id="serial-container" class="mb-3">
+                        </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submit-btn">
+                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            <span class="button-text">Cadastrar Equipamento(s)</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const quantidadeInput = document.getElementById('quantidade');
+    const serialIgualRadios = document.querySelectorAll('input[name="serial_igual"]');
+    const serialContainer = document.getElementById('serial-container');
+
+    function updateSerialFields() {
+        const quantidade = parseInt(quantidadeInput.value, 10);
+        const serialIgual = document.querySelector('input[name="serial_igual"]:checked').value;
+
+        serialContainer.innerHTML = '';
+
+        if (quantidade > 0) {
+            if (serialIgual === 'sim') {
+                serialContainer.innerHTML = `
+                    <div class="mb-3">
+                        <label for="n_serie_unico" class="form-label">N° de Série (para todos os ${quantidade} itens)</label>
+                        <input type="text" class="form-control" id="n_serie_unico" name="n_serie_unico" required>
+                    </div>
+                `;
+            } else {
+                let fieldsHtml = '';
+                for (let i = 1; i <= quantidade; i++) {
+                    fieldsHtml += `
+                        <div class="mb-3">
+                            <label for="n_serie_${i}" class="form-label">N° de Série do Item ${i}</label>
+                            <input type="text" class="form-control" id="n_serie_${i}" name="n_serie_multiplos[]" required>
+                        </div>
+                    `;
+                }
+                serialContainer.innerHTML = fieldsHtml;
+            }
+        }
+    }
+
+    quantidadeInput.addEventListener('input', updateSerialFields);
+    serialIgualRadios.forEach(radio => radio.addEventListener('change', updateSerialFields));
+    document.addEventListener('DOMContentLoaded', updateSerialFields);
+</script>
+<script>
+    const form = document.querySelector('form');
+    const submitBtn = document.getElementById('submit-btn');
+
+    form.addEventListener('submit', function() {
+        // Desabilita o botão para evitar cliques duplos
+        submitBtn.disabled = true;
+
+        // Mostra o spinner e esconde o texto
+        submitBtn.querySelector('.spinner-border').classList.remove('d-none');
+        submitBtn.querySelector('.button-text').style.display = 'none';
+    });
+</script>
+{% endblock %}

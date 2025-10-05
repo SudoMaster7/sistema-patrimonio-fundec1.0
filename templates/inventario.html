@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Visualizar Inventário{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-12">
+        <h2 class="mb-4">Últimos Itens Cadastrados</h2>
+        {% if items %}
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Unidade</th>
+                                <th>Categoria</th>
+                                <th>Marca</th>
+                                <th>N° de Série</th>
+                                <th>Estado</th>
+                                <th class="text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row_num, item in items %}
+                            <tr>
+                                <td>{{ item[0] }}</td>
+                                <td>{{ item[1] }}</td>
+                                <td>{{ item[3] }}</td>
+                                <td>{{ item[4] }}</td>
+                                <td>{{ item[5] }}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-warning btn-sm" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#editModal"
+                                            data-row-id="{{ row_num }}"
+                                            data-unidade="{{ item[0] }}"
+                                            data-categoria="{{ item[1] }}"
+                                            data-descricao="{{ item[2] }}"
+                                            data-marca="{{ item[3] }}"
+                                            data-nserie="{{ item[4] }}"
+                                            data-estado="{{ item[5] }}"
+                                            data-timestamp="{{ item[6] if item|length > 6 else '' }}">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">Nenhum item encontrado na planilha ou falha ao carregar.</div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Editar Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/update" method="post">
+                <div class="modal-body">
+                    <input type="hidden" id="editRowId" name="row_number">
+                    <input type="hidden" id="editTimestamp" name="timestamp">
+
+                    <div class="mb-3">
+                        <label for="editUnidade" class="form-label">Unidade</label>
+                        <input type="text" class="form-control" id="editUnidade" name="unidade" required>
+                    </div>
+                    <div class="mb-3">
+                         <label for="editCategoria" class="form-label">Categoria</label>
+                         <select class="form-select" id="editCategoria" name="categoria" required>
+                             <option value="Monitor">Monitor</option>
+                             <option value="CPU">CPU</option>
+                             <option value="Teclado e Mouse">Teclado e Mouse</option>
+                             <option value="Estabilizador">Estabilizador</option>
+                             <option value="Switch">Switch</option>
+                             <option value="Roteador">Roteador</option>
+                             <option value="Impressora">Impressora</option>
+                             <option value="Televisão">Televisão</option>
+                             <option value="Projetor">Projetor</option>
+                         </select>
+                    </div>
+                    <div class="mb-3">
+                         <label for="editDescricao" class="form-label">Descrição</label>
+                         <textarea class="form-control" id="editDescricao" name="descricao" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editMarca" class="form-label">Marca</label>
+                        <input type="text" class="form-control" id="editMarca" name="marca">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editNSerie" class="form-label">N° de Série</label>
+                        <input type="text" class="form-control" id="editNSerie" name="n_serie" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editEstado" class="form-label">Estado</label>
+                         <select class="form-select" id="editEstado" name="estado" required>
+                             <option value="Novo">Novo</option>
+                             <option value="Seminovo">Seminovo</option>
+                             <option value="Inservível">Inservível</option>
+                         </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="edit-submit-btn">
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        <span class="button-text">Salvar Alterações</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const editModal = document.getElementById('editModal');
+    if (editModal) {
+        editModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+
+            const rowId = button.getAttribute('data-row-id');
+            const unidade = button.getAttribute('data-unidade');
+            const categoria = button.getAttribute('data-categoria');
+            const descricao = button.getAttribute('data-descricao');
+            const marca = button.getAttribute('data-marca');
+            const nserie = button.getAttribute('data-nserie');
+            const estado = button.getAttribute('data-estado');
+            const timestamp = button.getAttribute('data-timestamp');
+
+            const modalBody = editModal.querySelector('.modal-body');
+            modalBody.querySelector('#editRowId').value = rowId;
+            modalBody.querySelector('#editTimestamp').value = timestamp;
+            modalBody.querySelector('#editUnidade').value = unidade;
+            modalBody.querySelector('#editCategoria').value = categoria;
+            modalBody.querySelector('#editDescricao').value = descricao;
+            modalBody.querySelector('#editMarca').value = marca;
+            modalBody.querySelector('#editNSerie').value = nserie;
+            modalBody.querySelector('#editEstado').value = estado;
+        });
+    }
+</script>
+<script>
+    const editForm = document.querySelector('#editModal form');
+    const editSubmitBtn = document.getElementById('edit-submit-btn');
+
+    editForm.addEventListener('submit', function() {
+        // Desabilita o botão
+        editSubmitBtn.disabled = true;
+
+        // Mostra o spinner e esconde o texto
+        editSubmitBtn.querySelector('.spinner-border').classList.remove('d-none');
+        editSubmitBtn.querySelector('.button-text').style.display = 'none';
+    });
+</script>
+{% endblock %}
