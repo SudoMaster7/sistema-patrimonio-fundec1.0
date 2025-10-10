@@ -139,49 +139,36 @@
       document.getElementById('tbody-inv').innerHTML = '<tr><td colspan="6" class="text-center p-4 text-danger">Erro ao carregar dados. Tente novamente.</td></tr>';
     }
   }
-
-  // NOVO: Função implementada para buscar todos os itens
+  
+  // Busca todos os itens da tabela
   async function fetchAllItems() {
     const btnAll = document.getElementById('view-all');
     const btnLoad = document.getElementById('load-more');
     btnAll.disabled = true;
-    btnLoad.style.display = 'none'; // Esconde o "Ver mais" durante o processo
+    btnLoad.style.display = 'none';
     btnAll.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Carregando tudo...`;
-
     try {
       let allResults = [];
       let tempOffset = 0;
-      const BATCH_SIZE_FOR_ALL = 200; // Busca em lotes maiores para ser mais rápido
-
+      const BATCH_SIZE_FOR_ALL = 200;
       while (true) {
         const res = await fetch(`/api/items?offset=${tempOffset}&limit=${BATCH_SIZE_FOR_ALL}`);
         if (!res.ok) throw new Error('Falha ao carregar uma página de dados.');
-        
         const data = await res.json();
         allResults = allResults.concat(data.items || []);
-        
-        // Condição de parada: a API informa que não há mais itens
         if (!data.has_more) break;
-        
         tempOffset += BATCH_SIZE_FOR_ALL;
       }
-
-      // Atualiza o estado da aplicação com os dados completos
       allItems = allResults;
       currentOffset = allResults.length;
       totalServerCount = allResults.length;
       hasMoreOnServer = false;
-      
-      // Limpa os filtros para mostrar a tabela completa
       document.querySelectorAll('input.filter').forEach(input => input.value = '');
-      
-      applyFilters(); // Renderiza a tabela completa
-      updateFooterUI(); // Atualiza o rodapé (que vai esconder os botões)
-
+      applyFilters();
+      updateFooterUI();
     } catch (err) {
       handleError('Erro ao carregar a tabela completa.', err);
     } finally {
-      // Garante que o botão volte ao normal, mesmo em caso de erro
       btnAll.disabled = false;
       btnAll.innerHTML = 'Ver toda a tabela';
     }
@@ -189,10 +176,8 @@
 
   function updateFooterUI() {
     document.getElementById('total-count').textContent = totalServerCount;
-    const btnLoad = document.getElementById('load-more');
-    const btnAll = document.getElementById('view-all');
-    btnLoad.style.display = hasMoreOnServer ? 'inline-block' : 'none';
-    btnAll.style.display = (hasMoreOnServer || allItems.length < totalServerCount) ? 'inline-block' : 'none';
+    document.getElementById('load-more').style.display = hasMoreOnServer ? 'inline-block' : 'none';
+    document.getElementById('view-all').style.display = (hasMoreOnServer || allItems.length < totalServerCount) ? 'inline-block' : 'none';
   }
 
   // Renderiza a tabela no estilo Bootstrap
@@ -209,6 +194,7 @@
     const fragment = document.createDocumentFragment();
     list.forEach(item => {
       const tr = document.createElement('tr');
+      // A MÁGICA ACONTECE AQUI: O onclick passa o objeto 'item' inteiro como uma string JSON
       tr.innerHTML = `
         <td>${escapeHtml(item.unidade)}</td>
         <td>${escapeHtml(item.categoria)}</td>
@@ -242,17 +228,82 @@
     renderTable(filteredList);
   }
 
-  // --- Funções do Modal de Edição com Bootstrap ---
+  // --- FUNÇÕES DO MODAL DE EDIÇÃO (COMPLETAS E FUNCIONAIS) ---
+  
+  /**
+   * Abre o modal de edição e preenche o formulário com os dados do item.
+   * @param {object} item - O objeto do item a ser editado.
+   */
   function openEditModal(item) {
-    // ... (código do modal não muda) ...
+    if (!item) return handleError('Item não encontrado.');
+    
+    const form = document.getElementById('editForm');
+    form.querySelector('#editRowId').value = item.row_number;
+    form.querySelector('#modal-row-num').textContent = item.row_number;
+    form.querySelector('#editUnidade').value = item.unidade || '';
+    form.querySelector('#editCategoria').value = item.categoria || '';
+    form.querySelector('#editDescricao').value = item.descricao || '';
+    form.querySelector('#editMarca').value = item.marca || '';
+    form.querySelector('#editNSerie').value = item.n_serie || '';
+    form.querySelector('#editEstado').value = item.estado || '';
+    
+    // Usa a instância do Bootstrap para exibir o modal
+    editModalInstance.show();
   }
 
+  /**
+   * Pega os dados do formulário do modal e envia para a API para salvar.
+   */
   async function submitEditModal() {
-    // ... (código do modal não muda) ...
+    const btn = document.getElementById('edit-submit-btn');
+    const spinner = btn.querySelector('.spinner-border');
+    const btnText = btn.querySelector('.button-text');
+    
+    // Ativa o estado de carregamento
+    btn.disabled = true;
+    spinner.classList.remove('d-none');
+    btnText.textContent = 'Salvando...';
+
+    const form = document.getElementById('editForm');
+    const payload = {
+        row_number: Number(form.querySelector('#editRowId').value),
+        unidade: form.querySelector('#editUnidade').value,
+        categoria: form.querySelector('#editCategoria').value,
+        descricao: form.querySelector('#editDescricao').value,
+        marca: form.querySelector('#editMarca').value,
+        n_serie: form.querySelector('#editNSerie').value,
+        estado: form.querySelector('#editEstado').value
+    };
+
+    try {
+      const res = await fetch('/api/update_row', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Falha na atualização');
+      
+      alert('Atualizado com sucesso!');
+      editModalInstance.hide();
+      
+      // Recarrega os dados para garantir que a tabela esteja 100% atualizada
+      currentOffset = 0;
+      await fetchItems(true);
+
+    } catch (err) {
+      handleError('Erro ao salvar: ' + err.message);
+    } finally {
+      // Restaura o botão ao estado normal
+      btn.disabled = false;
+      spinner.classList.add('d-none');
+      btnText.textContent = 'Salvar Alterações';
+    }
   }
 
-  // --- Event Listeners ---
+  // --- EVENT LISTENERS ---
   document.addEventListener('DOMContentLoaded', () => {
+    // Inicializa a instância do modal do Bootstrap
     editModalInstance = new bootstrap.Modal(document.getElementById('editModal'));
 
     document.querySelectorAll('input.filter').forEach(input => input.addEventListener('input', applyFilters));
@@ -261,11 +312,9 @@
       currentOffset = allItems.length;
       fetchItems();
     });
-
-    // ALTERAÇÃO: Conectando a nova função ao botão
     document.getElementById('view-all').addEventListener('click', fetchAllItems);
     
-    // Carga inicial
+    // Carga inicial dos dados
     currentOffset = 0;
     fetchItems(true);
   });
