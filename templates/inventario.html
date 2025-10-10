@@ -1,194 +1,271 @@
 {% extends "base.html" %}
 
-{% block title %}Inventário — Últimos registros{% endblock %}
+{% block title %}Inventário — Registros{% endblock %}
 
 {% block head %}
 <style>
-  :root{
-    --bg:#f7f9fb; --card:#ffffff; --muted:#6b7280; --accent:#2563eb;
-    --border:#e6eef8;
+  /* CSS unificado e compatível com tema claro/escuro */
+  :root {
+    --bg: #f7f9fb;
+    --card: #ffffff;
+    --muted: #6b7280;
+    --accent: #2563eb;
+    --border: #e6eef8;
+    --text: #0f172a;
+    --input-bg: #ffffff;
+    --table-header-color: #111827;
+    --table-row-border: #f1f5f9;
   }
-  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;box-shadow:0 1px 2px rgba(2,6,23,0.04)}
-  .controls{display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
-  .info{color:var(--muted);font-size:14px}
-  .table-wrap{overflow:auto;border-radius:6px;border:1px solid var(--border);background:#fff}
-  table{width:100%;border-collapse:collapse;min-width:900px}
-  thead th{position:sticky;top:0;background:linear-gradient(180deg,#fff,#fafcff);z-index:2;text-align:left;padding:10px 12px;font-size:13px;color:#111827;border-bottom:1px solid var(--border)}
-  tbody td{padding:10px 12px;font-size:14px;border-bottom:1px solid #f1f5f9;vertical-align:top}
-  tbody tr:nth-child(even){background:#fbfdff}
-  .row-num{width:64px;color:var(--muted)}
-  input.filter{width:100%;padding:6px 8px;border:1px solid #e6eef8;border-radius:6px;background:#fff}
-  .actions .btn{background:var(--accent);color:white;border:none;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px}
-  .footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
-  .load-more{background:#fff;border:1px solid var(--border);padding:8px 12px;border-radius:6px;cursor:pointer;margin-left:8px}
-  .btn-row{display:flex;gap:8px;align-items:center}
-  .disabled{opacity:0.6;pointer-events:none}
-  @media (max-width:720px){thead th,tbody td{font-size:13px;padding:8px}.controls{flex-direction:column;align-items:stretch}.btn-row{flex-direction:column;align-items:flex-end}}
+
+  [data-bs-theme="dark"] {
+    --bg: #0d1117;
+    --card: #161b22;
+    --muted: #848d97;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --input-bg: #0d1117;
+    --table-header-color: #ffffff;
+    --table-row-border: var(--border);
+  }
+
+  body { background: var(--bg); color: var(--text); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; box-shadow: 0 1px 2px rgba(2, 6, 23, 0.04); }
+  .controls { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+  .info { color: var(--muted); font-size: 14px; }
+  input.filter { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 13px; }
+  .footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; flex-wrap: wrap; gap: 8px; }
+  .btn-row { display: flex; gap: 8px; align-items: center; }
+  .btn-surface { background: var(--card); color: var(--text); border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+  .disabled { opacity: 0.6; pointer-events: none; }
+  
+  /* Ajustes para a tabela com estilo Bootstrap */
+  .table thead th { color: var(--table-header-color); }
+  .table tbody td { border-bottom-color: var(--table-row-border); }
+  .table-hover > tbody > tr:hover > * { --bs-table-hover-bg: rgba(0, 0, 0, 0.075); }
+  [data-bs-theme="dark"] .table-hover > tbody > tr:hover > * { --bs-table-hover-bg: rgba(255, 255, 255, 0.075); }
+
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="card">
   <div class="controls">
-    <div class="info">Mostrando os últimos <strong id="shown-count">0</strong> de <strong id="total-count">0</strong> itens</div>
+    <div class="info">Mostrando <strong id="shown-count">0</strong> de <strong id="total-count">0</strong> itens</div>
     <div style="flex:1"></div>
-    <div class="info">Filtros rápidos (cada coluna)</div>
-  </div>
-
-  <div class="table-wrap">
-    <table id="table-inv">
-      <thead>
-        <tr id="header-row">
-          <th class="row-num">Row</th>
-          <th>Unidade<br><input class="filter" data-col="unidade" placeholder="filtrar..."></th>
-          <th>Categoria<br><input class="filter" data-col="categoria" placeholder="filtrar..."></th>
-          <th>Descrição<br><input class="filter" data-col="descricao" placeholder="filtrar..."></th>
-          <th>Marca<br><input class="filter" data-col="marca" placeholder="filtrar..."></th>
-          <th>Nº Série<br><input class="filter" data-col="n_serie" placeholder="filtrar..."></th>
-          <th>Estado<br><input class="filter" data-col="estado" placeholder="filtrar..."></th>
-          <th>Timestamp</th>
-          <th style="width:120px">Ações</th>
-        </tr>
-      </thead>
-      <tbody id="tbody-inv"></tbody>
-    </table>
-  </div>
-
-  <div class="footer">
-    <div></div>
     <div class="btn-row">
-      <button id="load-more" class="load-more" style="display:none">Ver mais</button>
-      <button id="view-all" class="load-more" style="display:none">Ver toda a tabela</button>
+      <button id="load-more" class="btn-surface" style="display:none">Ver mais</button>
+      <button id="view-all" class="btn-surface" style="display:none">Ver toda a tabela</button>
     </div>
   </div>
+
+  <div class="table-responsive mt-3">
+    <table class="table table-striped table-hover align-middle" id="table-inv">
+      <thead class="table-dark">
+        <tr>
+          <th>Unidade<br><input class="filter" data-col="unidade" placeholder="Filtrar..."></th>
+          <th>Categoria<br><input class="filter" data-col="categoria" placeholder="Filtrar..."></th>
+          <th>Marca<br><input class="filter" data-col="marca" placeholder="Filtrar..."></th>
+          <th>N° de Série<br><input class="filter" data-col="n_serie" placeholder="Filtrar..."></th>
+          <th>Estado<br><input class="filter" data-col="estado" placeholder="Filtrar..."></th>
+          <th class="text-center" style="width: 100px;">Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-inv">
+        </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Editar Item (Linha <span id="modal-row-num"></span>)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editForm" onsubmit="event.preventDefault(); submitEditModal();">
+                <div class="modal-body">
+                    <input type="hidden" id="editRowId" name="row_number">
+                    <div class="mb-3"><label for="editUnidade" class="form-label">Unidade</label><input type="text" class="form-control" id="editUnidade" name="unidade" required></div>
+                    <div class="mb-3"><label for="editCategoria" class="form-label">Categoria</label><select class="form-select" id="editCategoria" name="categoria" required><option>Monitor</option><option>CPU</option><option>Teclado e Mouse</option><option>Estabilizador</option><option>Switch</option><option>Roteador</option><option>Impressora</option><option>Televisão</option><option>Projetor</option></select></div>
+                    <div class="mb-3"><label for="editDescricao" class="form-label">Descrição</label><textarea class="form-control" id="editDescricao" name="descricao" rows="2"></textarea></div>
+                    <div class="mb-3"><label for="editMarca" class="form-label">Marca</label><input type="text" class="form-control" id="editMarca" name="marca"></div>
+                    <div class="mb-3"><label for="editNSerie" class="form-label">N° de Série</label><input type="text" class="form-control" id="editNSerie" name="n_serie" required></div>
+                    <div class="mb-3"><label for="editEstado" class="form-label">Estado</label><select class="form-select" id="editEstado" name="estado" required><option>Novo</option><option>Seminovo</option><option>Inservível</option></select></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="edit-submit-btn">
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        <span class="button-text">Salvar Alterações</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-  let items = [];
-  let offset = 0;
-  const limit = 20;
-  let total = 0;
-  let has_more = false;
-  const MAX_PAGE = 200;
+  // Estado da aplicação
+  let allItems = [];
+  let currentOffset = 0;
+  const BATCH_SIZE = 20;
+  let totalServerCount = 0;
+  let hasMoreOnServer = false;
+  let editModalInstance = null; // Instância do Modal Bootstrap
 
-  async function fetchItems(initial = false, useLimit = limit){
-    const res = await fetch(`/api/items?offset=${offset}&limit=${useLimit}`);
-    if(!res.ok) return alert('Erro ao carregar itens');
-    const data = await res.json();
-    if(initial) items = data.items || []; else items = items.concat(data.items || []);
-    total = data.total || 0;
-    has_more = !!data.has_more;
-    updateUI();
+  // Função central de erros
+  function handleError(message, error) {
+    console.error(message, error);
+    alert(message);
   }
 
-  async function fetchAll(){
-    const btnLoad = document.getElementById('load-more');
-    const btnAll = document.getElementById('view-all');
-    btnLoad.classList.add('disabled'); btnAll.classList.add('disabled');
-    btnAll.textContent = 'Carregando...';
+  // Busca os dados da API com feedback visual
+  async function fetchItems(isInitialLoad = false) {
+    if (isInitialLoad) document.getElementById('tbody-inv').innerHTML = '<tr><td colspan="6" class="text-center p-4"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
     try {
-      let all = [];
-      let tempOffset = 0;
-      while (true) {
-        const res = await fetch(`/api/items?offset=${tempOffset}&limit=${MAX_PAGE}`);
-        if(!res.ok) throw new Error('Erro ao carregar página');
-        const data = await res.json();
-        all = all.concat(data.items || []);
-        if(!data.has_more) break;
-        tempOffset += MAX_PAGE;
-      }
-      items = all;
-      offset = items.length;
-      total = items.length;
-      has_more = false;
-      // limpa filtros
-      document.querySelectorAll('input.filter').forEach(i=>i.value='');
-      updateUI();
+      const res = await fetch(`/api/items?offset=${currentOffset}&limit=${BATCH_SIZE}`);
+      if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
+      const data = await res.json();
+      allItems = isInitialLoad ? (data.items || []) : allItems.concat(data.items || []);
+      totalServerCount = data.total || 0;
+      hasMoreOnServer = !!data.has_more;
+      applyFilters();
+      updateFooterUI();
     } catch (err) {
-      alert('Erro ao carregar toda a tabela: ' + err.message);
-    } finally {
-      btnLoad.classList.remove('disabled'); btnAll.classList.remove('disabled');
-      btnAll.textContent = 'Ver toda a tabela';
+      handleError('Falha ao carregar itens.', err);
+      document.getElementById('tbody-inv').innerHTML = '<tr><td colspan="6" class="text-center p-4 text-danger">Erro ao carregar dados. Tente novamente.</td></tr>';
     }
   }
 
-  function updateUI(){
-    renderTable(items);
-    document.getElementById('shown-count').textContent = items.length;
-    document.getElementById('total-count').textContent = total;
-    const btn = document.getElementById('load-more');
-    const btnAll = document.getElementById('view-all');
-    if(has_more){
-      btn.style.display = 'inline-block';
-      btnAll.style.display = 'inline-block';
-    } else {
-      btn.style.display = 'none';
-      if(items.length < total) btnAll.style.display = 'inline-block'; else btnAll.style.display = 'none';
-    }
+  function updateFooterUI() {
+    document.getElementById('total-count').textContent = totalServerCount;
+    document.getElementById('load-more').style.display = hasMoreOnServer ? 'inline-block' : 'none';
+    document.getElementById('view-all').style.display = (hasMoreOnServer || allItems.length < totalServerCount) ? 'inline-block' : 'none';
   }
 
-  function renderTable(list){
+  // Renderiza a tabela no estilo Bootstrap
+  function renderTable(list) {
     const tbody = document.getElementById('tbody-inv');
+    document.getElementById('shown-count').textContent = list.length;
     tbody.innerHTML = '';
-    for(const it of list){
+
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4">Nenhum item encontrado.</td></tr>';
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    list.forEach(item => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td class="row-num">${it.row_number}</td>
-        <td>${escapeHtml(it.unidade)}</td>
-        <td>${escapeHtml(it.categoria)}</td>
-        <td>${escapeHtml(it.descricao)}</td>
-        <td>${escapeHtml(it.marca)}</td>
-        <td>${escapeHtml(it.n_serie)}</td>
-        <td>${escapeHtml(it.estado)}</td>
-        <td>${escapeHtml(it.timestamp)}</td>
-        <td class="actions"><button class="btn" onclick="editRow(${it.row_number})">Editar</button></td>
+        <td>${escapeHtml(item.unidade)}</td>
+        <td>${escapeHtml(item.categoria)}</td>
+        <td>${escapeHtml(item.marca)}</td>
+        <td>${escapeHtml(item.n_serie)}</td>
+        <td>${escapeHtml(item.estado)}</td>
+        <td class="text-center">
+          <button class="btn btn-warning btn-sm" onclick='openEditModal(${JSON.stringify(item)})'>
+            <i class="fa-solid fa-pencil"></i> Editar
+          </button>
+        </td>
       `;
-      tbody.appendChild(tr);
+      fragment.appendChild(tr);
+    });
+    tbody.appendChild(fragment);
+  }
+  
+  function escapeHtml(text) { return (text || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  // Aplica os filtros nos dados já carregados
+  function applyFilters() {
+    const filters = Array.from(document.querySelectorAll('input.filter'));
+    let filteredList = allItems;
+    for (const f of filters) {
+      const val = f.value.trim().toLowerCase();
+      const col = f.dataset.col;
+      if (val) {
+        filteredList = filteredList.filter(item => (item[col] || '').toString().toLowerCase().includes(val));
+      }
+    }
+    renderTable(filteredList);
+  }
+
+  // --- Funções do Modal de Edição com Bootstrap ---
+  function openEditModal(item) {
+    if (!item) return handleError('Item não encontrado.');
+    const form = document.getElementById('editForm');
+    form.querySelector('#editRowId').value = item.row_number;
+    form.querySelector('#modal-row-num').textContent = item.row_number;
+    form.querySelector('#editUnidade').value = item.unidade || '';
+    form.querySelector('#editCategoria').value = item.categoria || '';
+    form.querySelector('#editDescricao').value = item.descricao || '';
+    form.querySelector('#editMarca').value = item.marca || '';
+    form.querySelector('#editNSerie').value = item.n_serie || '';
+    form.querySelector('#editEstado').value = item.estado || '';
+    editModalInstance.show();
+  }
+
+  async function submitEditModal() {
+    const btn = document.getElementById('edit-submit-btn');
+    const spinner = btn.querySelector('.spinner-border');
+    const btnText = btn.querySelector('.button-text');
+    
+    btn.disabled = true;
+    spinner.classList.remove('d-none');
+    btnText.textContent = 'Salvando...';
+
+    const form = document.getElementById('editForm');
+    const payload = {
+        row_number: Number(form.querySelector('#editRowId').value),
+        unidade: form.querySelector('#editUnidade').value,
+        categoria: form.querySelector('#editCategoria').value,
+        descricao: form.querySelector('#editDescricao').value,
+        marca: form.querySelector('#editMarca').value,
+        n_serie: form.querySelector('#editNSerie').value,
+        estado: form.querySelector('#editEstado').value
+    };
+
+    try {
+      const res = await fetch('/api/update_row', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Falha na atualização');
+      
+      alert('Atualizado com sucesso!');
+      editModalInstance.hide();
+      currentOffset = 0;
+      await fetchItems(true); // Recarrega os dados
+
+    } catch (err) {
+      handleError('Erro ao salvar: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      spinner.classList.add('d-none');
+      btnText.textContent = 'Salvar Alterações';
     }
   }
 
-  function escapeHtml(text){ return (text||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  // --- Event Listeners ---
+  document.addEventListener('DOMContentLoaded', () => {
+    editModalInstance = new bootstrap.Modal(document.getElementById('editModal'));
 
-  function applyFilters(){
-    const filters = document.querySelectorAll('input.filter');
-    let filtered = items.slice();
-    filters.forEach(f=>{
-      const val = f.value.trim().toLowerCase();
-      const col = f.dataset.col;
-      if(val) filtered = filtered.filter(i => (i[col]||'').toString().toLowerCase().includes(val));
+    document.querySelectorAll('input.filter').forEach(input => input.addEventListener('input', applyFilters));
+    document.getElementById('load-more').addEventListener('click', () => {
+      if (!hasMoreOnServer) return;
+      currentOffset = allItems.length;
+      fetchItems();
     });
-    renderTable(filtered);
-  }
-
-  document.addEventListener('input', (e)=>{ if(e.target.matches('input.filter')) applyFilters(); });
-
-  document.getElementById('load-more').addEventListener('click', async ()=>{
-    if(!has_more) return;
-    offset += limit;
-    await fetchItems(false);
+    document.getElementById('view-all').addEventListener('click', () => alert('Funcionalidade "Ver Tudo" ainda a ser implementada.'));
+    
+    // Carga inicial
+    currentOffset = 0;
+    fetchItems(true);
   });
-
-  document.getElementById('view-all').addEventListener('click', async ()=>{ await fetchAll(); });
-
-  async function editRow(rowNumber){
-    const item = items.find(i=>i.row_number==rowNumber);
-    if(!item) return alert('Item não encontrado');
-    const unidade = prompt('Unidade', item.unidade) || '';
-    const categoria = prompt('Categoria', item.categoria) || '';
-    const descricao = prompt('Descrição', item.descricao) || '';
-    const marca = prompt('Marca', item.marca) || '';
-    const n_serie = prompt('Nº Série', item.n_serie) || '';
-    const estado = prompt('Estado', item.estado) || '';
-
-    const payload = { row_number: rowNumber, unidade, categoria, descricao, marca, n_serie, estado };
-    const res = await fetch('/api/update_row', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-    const data = await res.json();
-    if(res.ok && data.success){ alert('Atualizado com sucesso'); offset = 0; await fetchItems(true); }
-    else alert('Erro: ' + (data.error || 'falha ao atualizar'));
-  }
-
-  (async ()=>{ offset = 0; await fetchItems(true); })();
 </script>
 {% endblock %}
