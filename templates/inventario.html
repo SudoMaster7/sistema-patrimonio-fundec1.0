@@ -1,237 +1,194 @@
-<!doctype html>
-<html lang="pt-br">
-<head>
-  <meta charset="utf-8">
-  <title>Inventário</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <style>
-    :root{
-      --bg:#f7f9fb; --card:#ffffff; --muted:#6b7280; --accent:#2563eb;
-      --border:#e6eef8;
-    }
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial; background:var(--bg); margin:0; padding:24px; color:#111827}
-    .container{max-width:1200px; margin:0 auto}
-    h1{margin:0 0 12px 0; font-size:20px}
-    .card{background:var(--card); border:1px solid var(--border); border-radius:8px; padding:16px; box-shadow:0 1px 2px rgba(2,6,23,0.04)}
-    .controls{display:flex; gap:12px; align-items:center; margin-bottom:12px; flex-wrap:wrap}
-    .info{color:var(--muted); font-size:14px}
-    .table-wrap{overflow:auto; border-radius:6px; border:1px solid var(--border)}
-    table{width:100%; border-collapse:collapse; min-width:900px}
-    thead th{position:sticky; top:0; background:linear-gradient(180deg,#fff,#fafcff); z-index:2; text-align:left; padding:10px 12px; font-size:13px; color:#111827; border-bottom:1px solid var(--border)}
-    tbody td{padding:10px 12px; font-size:14px; border-bottom:1px solid #f1f5f9; vertical-align:top}
-    tbody tr:nth-child(even){background:#fbfdff}
-    .row-num{width:64px; color:var(--muted)}
-    input.filter{width:100%; padding:6px 8px; border:1px solid #e6eef8; border-radius:6px; background:#fff}
-    .actions .btn{background:var(--accent); color:white; border:none; padding:6px 8px; border-radius:6px; cursor:pointer; font-size:13px}
-    .actions .btn.secondary{background:#fff; color:var(--accent); border:1px solid var(--accent)}
-    .footer{display:flex; justify-content:space-between; align-items:center; margin-top:12px}
-    .load-more{background:#fff; border:1px solid var(--border); padding:8px 12px; border-radius:6px; cursor:pointer; margin-left:8px}
-    .btn-row {display:flex; gap:8px; align-items:center}
-    .disabled {opacity:0.6; pointer-events:none}
-    @media (max-width:720px){
-      thead th, tbody td{font-size:13px; padding:8px}
-      .controls{flex-direction:column; align-items:stretch}
-      .btn-row{flex-direction:column; align-items:flex-end}
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Inventário</h1>
-    <div class="card">
-      <div class="controls">
-        <div class="info">Mostrando os últimos <strong id="shown-count">0</strong> de <strong id="total-count">0</strong> itens</div>
-        <div style="flex:1"></div>
-        <div class="info">Filtros rápidos (cada coluna)</div>
-      </div>
+{% extends "base.html" %}
 
-      <div class="table-wrap">
-        <table id="table-inv">
-          <thead>
-            <tr id="header-row">
-              <th class="row-num">Row</th>
-              <th>Unidade<br><input class="filter" data-col="unidade" placeholder="filtrar..."></th>
-              <th>Categoria<br><input class="filter" data-col="categoria" placeholder="filtrar..."></th>
-              <th>Descrição<br><input class="filter" data-col="descricao" placeholder="filtrar..."></th>
-              <th>Marca<br><input class="filter" data-col="marca" placeholder="filtrar..."></th>
-              <th>Nº Série<br><input class="filter" data-col="n_serie" placeholder="filtrar..."></th>
-              <th>Estado<br><input class="filter" data-col="estado" placeholder="filtrar..."></th>
-              <th>Timestamp</th>
-              <th style="width:120px">Ações</th>
-            </tr>
-          </thead>
-          <tbody id="tbody-inv"></tbody>
-        </table>
-      </div>
+{% block title %}Inventário — Últimos registros{% endblock %}
 
-      <div class="footer">
-        <div></div>
-        <div class="btn-row">
-          <button id="load-more" class="load-more" style="display:none">Ver mais</button>
-          <button id="view-all" class="load-more" style="display:none">Ver toda a tabela</button>
-        </div>
-      </div>
-    </div>
+{% block head %}
+<style>
+  :root{
+    --bg:#f7f9fb; --card:#ffffff; --muted:#6b7280; --accent:#2563eb;
+    --border:#e6eef8;
+  }
+  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;box-shadow:0 1px 2px rgba(2,6,23,0.04)}
+  .controls{display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+  .info{color:var(--muted);font-size:14px}
+  .table-wrap{overflow:auto;border-radius:6px;border:1px solid var(--border);background:#fff}
+  table{width:100%;border-collapse:collapse;min-width:900px}
+  thead th{position:sticky;top:0;background:linear-gradient(180deg,#fff,#fafcff);z-index:2;text-align:left;padding:10px 12px;font-size:13px;color:#111827;border-bottom:1px solid var(--border)}
+  tbody td{padding:10px 12px;font-size:14px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+  tbody tr:nth-child(even){background:#fbfdff}
+  .row-num{width:64px;color:var(--muted)}
+  input.filter{width:100%;padding:6px 8px;border:1px solid #e6eef8;border-radius:6px;background:#fff}
+  .actions .btn{background:var(--accent);color:white;border:none;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px}
+  .footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+  .load-more{background:#fff;border:1px solid var(--border);padding:8px 12px;border-radius:6px;cursor:pointer;margin-left:8px}
+  .btn-row{display:flex;gap:8px;align-items:center}
+  .disabled{opacity:0.6;pointer-events:none}
+  @media (max-width:720px){thead th,tbody td{font-size:13px;padding:8px}.controls{flex-direction:column;align-items:stretch}.btn-row{flex-direction:column;align-items:flex-end}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="controls">
+    <div class="info">Mostrando os últimos <strong id="shown-count">0</strong> de <strong id="total-count">0</strong> itens</div>
+    <div style="flex:1"></div>
+    <div class="info">Filtros rápidos (cada coluna)</div>
   </div>
 
-  <script>
-    let items = []; // itens carregados (mais recentes primeiro)
-    let offset = 0;
-    const limit = 20;
-    let total = 0;
-    let has_more = false;
-    const MAX_PAGE = 200; // usa 200 para páginas quando precisar carregar tudo
+  <div class="table-wrap">
+    <table id="table-inv">
+      <thead>
+        <tr id="header-row">
+          <th class="row-num">Row</th>
+          <th>Unidade<br><input class="filter" data-col="unidade" placeholder="filtrar..."></th>
+          <th>Categoria<br><input class="filter" data-col="categoria" placeholder="filtrar..."></th>
+          <th>Descrição<br><input class="filter" data-col="descricao" placeholder="filtrar..."></th>
+          <th>Marca<br><input class="filter" data-col="marca" placeholder="filtrar..."></th>
+          <th>Nº Série<br><input class="filter" data-col="n_serie" placeholder="filtrar..."></th>
+          <th>Estado<br><input class="filter" data-col="estado" placeholder="filtrar..."></th>
+          <th>Timestamp</th>
+          <th style="width:120px">Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-inv"></tbody>
+    </table>
+  </div>
 
-    async function fetchItems(initial = false, useLimit = limit){
-      const res = await fetch(`/api/items?offset=${offset}&limit=${useLimit}`);
-      if(!res.ok) return alert('Erro ao carregar itens');
-      const data = await res.json();
-      if(initial){
-        items = data.items || [];
-      } else {
-        items = items.concat(data.items || []);
+  <div class="footer">
+    <div></div>
+    <div class="btn-row">
+      <button id="load-more" class="load-more" style="display:none">Ver mais</button>
+      <button id="view-all" class="load-more" style="display:none">Ver toda a tabela</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let items = [];
+  let offset = 0;
+  const limit = 20;
+  let total = 0;
+  let has_more = false;
+  const MAX_PAGE = 200;
+
+  async function fetchItems(initial = false, useLimit = limit){
+    const res = await fetch(`/api/items?offset=${offset}&limit=${useLimit}`);
+    if(!res.ok) return alert('Erro ao carregar itens');
+    const data = await res.json();
+    if(initial) items = data.items || []; else items = items.concat(data.items || []);
+    total = data.total || 0;
+    has_more = !!data.has_more;
+    updateUI();
+  }
+
+  async function fetchAll(){
+    const btnLoad = document.getElementById('load-more');
+    const btnAll = document.getElementById('view-all');
+    btnLoad.classList.add('disabled'); btnAll.classList.add('disabled');
+    btnAll.textContent = 'Carregando...';
+    try {
+      let all = [];
+      let tempOffset = 0;
+      while (true) {
+        const res = await fetch(`/api/items?offset=${tempOffset}&limit=${MAX_PAGE}`);
+        if(!res.ok) throw new Error('Erro ao carregar página');
+        const data = await res.json();
+        all = all.concat(data.items || []);
+        if(!data.has_more) break;
+        tempOffset += MAX_PAGE;
       }
-      total = data.total || 0;
-      has_more = !!data.has_more;
+      items = all;
+      offset = items.length;
+      total = items.length;
+      has_more = false;
+      // limpa filtros
+      document.querySelectorAll('input.filter').forEach(i=>i.value='');
       updateUI();
+    } catch (err) {
+      alert('Erro ao carregar toda a tabela: ' + err.message);
+    } finally {
+      btnLoad.classList.remove('disabled'); btnAll.classList.remove('disabled');
+      btnAll.textContent = 'Ver toda a tabela';
     }
+  }
 
-    async function fetchAll(){
-      // desabilita botões enquanto carrega
-      const btnLoad = document.getElementById('load-more');
-      const btnAll = document.getElementById('view-all');
-      btnLoad.classList.add('disabled'); btnAll.classList.add('disabled');
-      btnAll.textContent = 'Carregando...';
-
-      try {
-        let all = [];
-        let tempOffset = 0;
-        while (true) {
-          const res = await fetch(`/api/items?offset=${tempOffset}&limit=${MAX_PAGE}`);
-          if(!res.ok) throw new Error('Erro ao carregar página');
-          const data = await res.json();
-          all = all.concat(data.items || []);
-          if(!data.has_more) break;
-          tempOffset += MAX_PAGE;
-        }
-        items = all;
-        offset = items.length; // marca como já carregado
-        total = items.length;
-        has_more = false;
-        updateUI();
-        // limpa filtros se houver (opcional)
-        document.querySelectorAll('input.filter').forEach(i=>i.value='');
-      } catch (err) {
-        alert('Erro ao carregar toda a tabela: ' + err.message);
-      } finally {
-        btnLoad.classList.remove('disabled'); btnAll.classList.remove('disabled');
-        btnAll.textContent = 'Ver toda a tabela';
-      }
+  function updateUI(){
+    renderTable(items);
+    document.getElementById('shown-count').textContent = items.length;
+    document.getElementById('total-count').textContent = total;
+    const btn = document.getElementById('load-more');
+    const btnAll = document.getElementById('view-all');
+    if(has_more){
+      btn.style.display = 'inline-block';
+      btnAll.style.display = 'inline-block';
+    } else {
+      btn.style.display = 'none';
+      if(items.length < total) btnAll.style.display = 'inline-block'; else btnAll.style.display = 'none';
     }
+  }
 
-    function updateUI(){
-      renderTable(items);
-      document.getElementById('shown-count').textContent = items.length;
-      document.getElementById('total-count').textContent = total;
-      const btn = document.getElementById('load-more');
-      const btnAll = document.getElementById('view-all');
-      if(has_more){
-        btn.style.display = 'inline-block';
-        btnAll.style.display = 'inline-block';
-      } else {
-        btn.style.display = 'none';
-        // Se total for maior que já carregado, ainda ofereça "Ver toda a tabela"
-        if(items.length < total){
-          btnAll.style.display = 'inline-block';
-        } else {
-          btnAll.style.display = 'none';
-        }
-      }
+  function renderTable(list){
+    const tbody = document.getElementById('tbody-inv');
+    tbody.innerHTML = '';
+    for(const it of list){
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="row-num">${it.row_number}</td>
+        <td>${escapeHtml(it.unidade)}</td>
+        <td>${escapeHtml(it.categoria)}</td>
+        <td>${escapeHtml(it.descricao)}</td>
+        <td>${escapeHtml(it.marca)}</td>
+        <td>${escapeHtml(it.n_serie)}</td>
+        <td>${escapeHtml(it.estado)}</td>
+        <td>${escapeHtml(it.timestamp)}</td>
+        <td class="actions"><button class="btn" onclick="editRow(${it.row_number})">Editar</button></td>
+      `;
+      tbody.appendChild(tr);
     }
+  }
 
-    function renderTable(list){
-      const tbody = document.getElementById('tbody-inv');
-      tbody.innerHTML = '';
-      for(const it of list){
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="row-num">${it.row_number}</td>
-          <td>${escapeHtml(it.unidade)}</td>
-          <td>${escapeHtml(it.categoria)}</td>
-          <td>${escapeHtml(it.descricao)}</td>
-          <td>${escapeHtml(it.marca)}</td>
-          <td>${escapeHtml(it.n_serie)}</td>
-          <td>${escapeHtml(it.estado)}</td>
-          <td>${escapeHtml(it.timestamp)}</td>
-          <td class="actions"><button class="btn" onclick="editRow(${it.row_number})">Editar</button></td>
-        `;
-        tbody.appendChild(tr);
-      }
-    }
+  function escapeHtml(text){ return (text||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-    function escapeHtml(text){ return (text||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-    function applyFilters(){
-      const filters = document.querySelectorAll('input.filter');
-      let filtered = items.slice();
-      filters.forEach(f=>{
-        const val = f.value.trim().toLowerCase();
-        const col = f.dataset.col;
-        if(val){
-          filtered = filtered.filter(i => (i[col]||'').toString().toLowerCase().includes(val));
-        }
-      });
-      renderTable(filtered);
-    }
-
-    document.addEventListener('input', (e)=>{
-      if(e.target.matches('input.filter')) applyFilters();
+  function applyFilters(){
+    const filters = document.querySelectorAll('input.filter');
+    let filtered = items.slice();
+    filters.forEach(f=>{
+      const val = f.value.trim().toLowerCase();
+      const col = f.dataset.col;
+      if(val) filtered = filtered.filter(i => (i[col]||'').toString().toLowerCase().includes(val));
     });
+    renderTable(filtered);
+  }
 
-    document.getElementById('load-more').addEventListener('click', async ()=>{
-      if(!has_more) return;
-      offset += limit;
-      await fetchItems(false);
-    });
+  document.addEventListener('input', (e)=>{ if(e.target.matches('input.filter')) applyFilters(); });
 
-    document.getElementById('view-all').addEventListener('click', async ()=>{
-      await fetchAll();
-    });
+  document.getElementById('load-more').addEventListener('click', async ()=>{
+    if(!has_more) return;
+    offset += limit;
+    await fetchItems(false);
+  });
 
-    async function editRow(rowNumber){
-      const item = items.find(i=>i.row_number==rowNumber);
-      if(!item) return alert('Item não encontrado');
-      const unidade = prompt('Unidade', item.unidade) || '';
-      const categoria = prompt('Categoria', item.categoria) || '';
-      const descricao = prompt('Descrição', item.descricao) || '';
-      const marca = prompt('Marca', item.marca) || '';
-      const n_serie = prompt('Nº Série', item.n_serie) || '';
-      const estado = prompt('Estado', item.estado) || '';
+  document.getElementById('view-all').addEventListener('click', async ()=>{ await fetchAll(); });
 
-      const payload = { row_number: rowNumber, unidade, categoria, descricao, marca, n_serie, estado };
+  async function editRow(rowNumber){
+    const item = items.find(i=>i.row_number==rowNumber);
+    if(!item) return alert('Item não encontrado');
+    const unidade = prompt('Unidade', item.unidade) || '';
+    const categoria = prompt('Categoria', item.categoria) || '';
+    const descricao = prompt('Descrição', item.descricao) || '';
+    const marca = prompt('Marca', item.marca) || '';
+    const n_serie = prompt('Nº Série', item.n_serie) || '';
+    const estado = prompt('Estado', item.estado) || '';
 
-      const res = await fetch('/api/update_row', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(payload)
-      });
+    const payload = { row_number: rowNumber, unidade, categoria, descricao, marca, n_serie, estado };
+    const res = await fetch('/api/update_row', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const data = await res.json();
+    if(res.ok && data.success){ alert('Atualizado com sucesso'); offset = 0; await fetchItems(true); }
+    else alert('Erro: ' + (data.error || 'falha ao atualizar'));
+  }
 
-      const data = await res.json();
-      if(res.ok && data.success){
-        alert('Atualizado com sucesso');
-        // Recarrega desde o início para garantir sincronia
-        offset = 0;
-        await fetchItems(true);
-      } else {
-        alert('Erro: ' + (data.error || 'falha ao atualizar'));
-      }
-    }
-
-    // Carrega primeiros 20 (mais recentes)
-    (async ()=>{
-      offset = 0;
-      await fetchItems(true);
-    })();
-  </script>
-</body>
-</html>
+  (async ()=>{ offset = 0; await fetchItems(true); })();
+</script>
+{% endblock %}
