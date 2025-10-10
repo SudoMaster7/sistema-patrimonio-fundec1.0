@@ -5,25 +5,68 @@
 {% block head %}
 <style>
   :root{
-    --bg:#f7f9fb; --card:#ffffff; --muted:#6b7280; --accent:#2563eb;
+    --bg:#f7f9fb;
+    --card:#ffffff;
+    --muted:#6b7280;
+    --accent:#2563eb;
+    --accent-600:#1e40af;
     --border:#e6eef8;
+    --danger:#ef4444;
+    --radius:8px;
+    --small:12px;
   }
-  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;box-shadow:0 1px 2px rgba(2,6,23,0.04)}
+
+  /* container/card */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:0 4px 20px rgba(2,6,23,0.04)}
   .controls{display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
   .info{color:var(--muted);font-size:14px}
+
+  /* table wrap */
   .table-wrap{overflow:auto;border-radius:6px;border:1px solid var(--border);background:#fff}
-  table{width:100%;border-collapse:collapse;min-width:900px}
-  thead th{position:sticky;top:0;background:linear-gradient(180deg,#fff,#fafcff);z-index:2;text-align:left;padding:10px 12px;font-size:13px;color:#111827;border-bottom:1px solid var(--border)}
-  tbody td{padding:10px 12px;font-size:14px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+  table{width:100%;border-collapse:collapse;min-width:880px;font-family:inherit;font-size:14px}
+  colgroup col:nth-child(1){width:60px}
+  colgroup col:nth-child(8){width:160px}
+  thead th{
+    position:sticky;top:0;background:linear-gradient(180deg,#ffffff,#fbfdff);
+    z-index:3;text-align:left;padding:10px 12px;font-size:13px;color:#111827;border-bottom:1px solid var(--border);
+    white-space:nowrap;
+  }
+
+  /* filtro dentro do th */
+  thead th .filter-wrap{display:flex;flex-direction:column;gap:6px}
+  input.filter{width:100%;padding:6px 8px;border:1px solid #e9f0fb;border-radius:6px;background:#fafcff;font-size:13px;color:#0f172a}
+
+  tbody td{padding:10px 12px;font-size:14px;border-bottom:1px solid #f1f5f9;vertical-align:top;color:#0f172a}
   tbody tr:nth-child(even){background:#fbfdff}
-  .row-num{width:64px;color:var(--muted)}
-  input.filter{width:100%;padding:6px 8px;border:1px solid #e6eef8;border-radius:6px;background:#fff}
-  .actions .btn{background:var(--accent);color:white;border:none;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px}
+  tbody tr:hover{background:#f7fbff}
+  .row-num{color:var(--muted);font-size:13px}
+
+  /* ações */
+  .actions .btn{background:var(--accent);color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:13px}
+  .actions .btn.secondary{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  .actions .btn.small{padding:4px 8px;font-size:12px;border-radius:6px}
+  .actions .btn.delete{background:var(--danger);}
+
+  /* footer / botões */
   .footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
-  .load-more{background:#fff;border:1px solid var(--border);padding:8px 12px;border-radius:6px;cursor:pointer;margin-left:8px}
   .btn-row{display:flex;gap:8px;align-items:center}
+  .load-more{background:#fff;border:1px solid var(--border);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:14px}
   .disabled{opacity:0.6;pointer-events:none}
-  @media (max-width:720px){thead th,tbody td{font-size:13px;padding:8px}.controls{flex-direction:column;align-items:stretch}.btn-row{flex-direction:column;align-items:flex-end}}
+
+  /* responsividade */
+  @media (max-width:980px){
+    table{min-width:780px}
+    colgroup col:nth-child(1){width:48px}
+  }
+  @media (max-width:720px){
+    .controls{flex-direction:column;align-items:stretch}
+    table{min-width:650px;font-size:13px}
+    thead th, tbody td{padding:8px}
+    .btn-row{flex-direction:row}
+  }
+
+  /* ajustes visuais opcionais */
+  .muted{color:var(--muted);font-size:13px}
 </style>
 {% endblock %}
 
@@ -35,19 +78,64 @@
     <div class="info">Filtros rápidos (cada coluna)</div>
   </div>
 
-  <div class="table-wrap">
+  <div class="table-wrap" role="region" aria-label="Tabela de inventário">
     <table id="table-inv">
+      <colgroup>
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+        <col />
+      </colgroup>
       <thead>
         <tr id="header-row">
-          <th class="row-num">Row</th>
-          <th>Unidade<br><input class="filter" data-col="unidade" placeholder="filtrar..."></th>
-          <th>Categoria<br><input class="filter" data-col="categoria" placeholder="filtrar..."></th>
-          <th>Descrição<br><input class="filter" data-col="descricao" placeholder="filtrar..."></th>
-          <th>Marca<br><input class="filter" data-col="marca" placeholder="filtrar..."></th>
-          <th>Nº Série<br><input class="filter" data-col="n_serie" placeholder="filtrar..."></th>
-          <th>Estado<br><input class="filter" data-col="estado" placeholder="filtrar..."></th>
-          <th>Timestamp</th>
-          <th style="width:120px">Ações</th>
+          <th class="row-num">
+            Row
+          </th>
+          <th>
+            <div class="filter-wrap">
+              <div>Unidade</div>
+              <input class="filter" data-col="unidade" placeholder="filtrar unidade...">
+            </div>
+          </th>
+          <th>
+            <div class="filter-wrap">
+              <div>Categoria</div>
+              <input class="filter" data-col="categoria" placeholder="filtrar categoria...">
+            </div>
+          </th>
+          <th>
+            <div class="filter-wrap">
+              <div>Descrição</div>
+              <input class="filter" data-col="descricao" placeholder="filtrar descrição...">
+            </div>
+          </th>
+          <th>
+            <div class="filter-wrap">
+              <div>Marca</div>
+              <input class="filter" data-col="marca" placeholder="filtrar marca...">
+            </div>
+          </th>
+          <th>
+            <div class="filter-wrap">
+              <div>Nº Série</div>
+              <input class="filter" data-col="n_serie" placeholder="filtrar série...">
+            </div>
+          </th>
+          <th>
+            <div class="filter-wrap">
+              <div>Estado</div>
+              <input class="filter" data-col="estado" placeholder="filtrar estado...">
+            </div>
+          </th>
+          <th>
+            Timestamp
+          </th>
+          <th style="width:150px">Ações</th>
         </tr>
       </thead>
       <tbody id="tbody-inv"></tbody>
@@ -55,7 +143,7 @@
   </div>
 
   <div class="footer">
-    <div></div>
+    <div class="muted">Dica: use os filtros acima para localizar itens rapidamente</div>
     <div class="btn-row">
       <button id="load-more" class="load-more" style="display:none">Ver mais</button>
       <button id="view-all" class="load-more" style="display:none">Ver toda a tabela</button>
