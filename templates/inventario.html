@@ -5,81 +5,137 @@
 {% block head %}
 <style>
   :root{
-    --bg:#f7f9fb;
-    --card:#ffffff;
-    --muted:#6b7280;
-    --accent:#2563eb;
-    --accent-600:#1e40af;
-    --border:#e6eef8;
-    --danger:#ef4444;
-    --radius:8px;
-    --small:12px;
+    --bg: #f6f8fb;
+    --card: #ffffff;
+    --muted: #6b7280;
+    --accent: #2563eb;
+    --accent-600: #1e40af;
+    --border: #e6eef8;
+    --danger: #ef4444;
+    --radius: 10px;
+    --gap: 12px;
+    --text: #0f172a;
   }
 
-  /* container/card */
-  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:0 4px 20px rgba(2,6,23,0.04)}
-  .controls{display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
-  .info{color:var(--muted);font-size:14px}
+  body { background: var(--bg); }
 
-  /* table wrap */
-  .table-wrap{overflow:auto;border-radius:6px;border:1px solid var(--border);background:#fff}
-  table{width:100%;border-collapse:collapse;min-width:880px;font-family:inherit;font-size:14px}
-  colgroup col:nth-child(1){width:60px}
-  colgroup col:nth-child(8){width:160px}
+  .card{
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: 0 6px 22px rgba(15,23,42,0.04);
+  }
+
+  .controls{ display:flex; gap:var(--gap); align-items:center; margin-bottom:14px; flex-wrap:wrap; }
+  .info{ color:var(--muted); font-size:14px; }
+
+  .table-wrap{
+    overflow:auto;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background: linear-gradient(180deg,#fff,#fbfdff);
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:980px;
+    font-family:inherit;
+    color:var(--text);
+  }
+
+  colgroup col:nth-child(1){ width:68px; }
+  colgroup col:nth-child(9){ width:150px; }
+
   thead th{
-    position:sticky;top:0;background:linear-gradient(180deg,#ffffff,#fbfdff);
-    z-index:3;text-align:left;padding:10px 12px;font-size:13px;color:#111827;border-bottom:1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: linear-gradient(180deg,#ffffff,#f8fbff);
+    padding:12px 14px;
+    font-size:13px;
+    text-align:left;
+    color:#0b1220;
+    border-bottom:1px solid var(--border);
     white-space:nowrap;
   }
 
-  /* filtro dentro do th */
-  thead th .filter-wrap{display:flex;flex-direction:column;gap:6px}
-  input.filter{width:100%;padding:6px 8px;border:1px solid #e9f0fb;border-radius:6px;background:#fafcff;font-size:13px;color:#0f172a}
+  thead th .label { display:block; font-weight:600; margin-bottom:6px; font-size:13px; }
+  thead th .filter{ width:100%; box-sizing:border-box; padding:8px 10px; font-size:13px; border:1px solid #e9f0fb; border-radius:8px; background:#fbfeff; color:var(--text); }
 
-  tbody td{padding:10px 12px;font-size:14px;border-bottom:1px solid #f1f5f9;vertical-align:top;color:#0f172a}
-  tbody tr:nth-child(even){background:#fbfdff}
-  tbody tr:hover{background:#f7fbff}
-  .row-num{color:var(--muted);font-size:13px}
+  tbody td{
+    padding:12px 14px;
+    border-bottom:1px solid #f1f5f9;
+    vertical-align:top;
+    font-size:14px;
+  }
 
-  /* ações */
-  .actions .btn{background:var(--accent);color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:13px}
-  .actions .btn.secondary{background:#fff;color:var(--accent);border:1px solid var(--accent)}
-  .actions .btn.small{padding:4px 8px;font-size:12px;border-radius:6px}
-  .actions .btn.delete{background:var(--danger);}
+  tbody tr:nth-child(even){ background:#fbfdff; }
+  tbody tr:hover{ background:#f3f8ff; }
 
-  /* footer / botões */
-  .footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
-  .btn-row{display:flex;gap:8px;align-items:center}
-  .load-more{background:#fff;border:1px solid var(--border);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:14px}
-  .disabled{opacity:0.6;pointer-events:none}
+  .row-num{ color:var(--muted); font-size:13px; }
 
-  /* responsividade */
+  .actions{ display:flex; gap:8px; align-items:center; }
+  .actions .btn{
+    background:var(--accent); color:#fff; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; font-size:13px;
+  }
+  .actions .btn.secondary{ background:#fff; color:var(--accent); border:1px solid var(--accent); }
+  .actions .btn.danger{ background:var(--danger); }
+
+  .footer{ display:flex; justify-content:space-between; align-items:center; margin-top:12px; gap:8px; flex-wrap:wrap; }
+  .btn-row{ display:flex; gap:8px; }
+  .btn-surface{
+    background:#fff; border:1px solid var(--border); padding:9px 12px; border-radius:8px; cursor:pointer; font-size:14px;
+  }
+  .btn-primary{ background:var(--accent); color:#fff; border: none; padding:9px 14px; border-radius:8px; cursor:pointer; font-size:14px; }
+
+  .disabled{ opacity:0.6; pointer-events:none; }
+
   @media (max-width:980px){
-    table{min-width:780px}
-    colgroup col:nth-child(1){width:48px}
+    table{ min-width:820px; }
+    thead th, tbody td { padding:10px; font-size:13px; }
+    colgroup col:nth-child(1){ width:56px; }
   }
   @media (max-width:720px){
-    .controls{flex-direction:column;align-items:stretch}
-    table{min-width:650px;font-size:13px}
-    thead th, tbody td{padding:8px}
-    .btn-row{flex-direction:row}
+    .controls{ flex-direction:column; align-items:stretch; gap:8px; }
+    .footer{ flex-direction:column-reverse; align-items:stretch; }
+    .btn-row{ justify-content:flex-end; }
+    table{ min-width:700px; }
   }
 
-  /* ajustes visuais opcionais */
-  .muted{color:var(--muted);font-size:13px}
+  /* Modal */
+  .modal-backdrop{
+    position:fixed; inset:0; background: rgba(2,6,23,0.35); display:none; align-items:center; justify-content:center; z-index:60;
+  }
+  .modal-backdrop.show{ display:flex; }
+  .modal{
+    width:100%; max-width:720px; background:#fff; border-radius:12px; padding:18px; box-shadow:0 12px 40px rgba(2,6,23,0.2);
+  }
+  .modal h3{ margin:0 0 12px 0; font-size:18px; }
+  .modal .row{ display:flex; gap:10px; margin-bottom:10px; }
+  .modal .row .col{ flex:1; }
+  .modal label{ display:block; font-size:13px; margin-bottom:6px; color:var(--muted); }
+  .modal input[type="text"], .modal textarea, .modal select{
+    width:100%; padding:8px 10px; border-radius:8px; border:1px solid #e9f0fb; font-size:14px;
+  }
+  .modal .actions-row{ display:flex; gap:8px; justify-content:flex-end; margin-top:12px; }
+  .modal .btn{ padding:8px 12px; border-radius:8px; cursor:pointer; border: none; }
+  .modal .btn.cancel{ background:#fff; border:1px solid var(--border); color:var(--text); }
+  .modal .btn.save{ background:var(--accent); color:#fff; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="card">
+<div class="card" role="region" aria-label="Inventário">
   <div class="controls">
-    <div class="info">Mostrando os últimos <strong id="shown-count">0</strong> de <strong id="total-count">0</strong> itens</div>
+    <div class="info">Mostrando os últimos <strong id="shown-count">0</strong> de <strong id="total-count">0</strong></div>
     <div style="flex:1"></div>
-    <div class="info">Filtros rápidos (cada coluna)</div>
+    <div class="info">Use os filtros para buscar por coluna</div>
   </div>
 
-  <div class="table-wrap" role="region" aria-label="Tabela de inventário">
-    <table id="table-inv">
+  <div class="table-wrap" tabindex="0">
+    <table id="table-inv" aria-describedby="table-desc">
       <colgroup>
         <col />
         <col />
@@ -92,62 +148,108 @@
         <col />
       </colgroup>
       <thead>
-        <tr id="header-row">
-          <th class="row-num">
-            Row
-          </th>
+        <tr>
+          <th class="row-num"><span class="label">Row</span></th>
+
           <th>
-            <div class="filter-wrap">
-              <div>Unidade</div>
-              <input class="filter" data-col="unidade" placeholder="filtrar unidade...">
-            </div>
+            <span class="label">Unidade</span>
+            <input class="filter" data-col="unidade" placeholder="filtrar unidade..." />
           </th>
+
           <th>
-            <div class="filter-wrap">
-              <div>Categoria</div>
-              <input class="filter" data-col="categoria" placeholder="filtrar categoria...">
-            </div>
+            <span class="label">Categoria</span>
+            <input class="filter" data-col="categoria" placeholder="filtrar categoria..." />
           </th>
+
           <th>
-            <div class="filter-wrap">
-              <div>Descrição</div>
-              <input class="filter" data-col="descricao" placeholder="filtrar descrição...">
-            </div>
+            <span class="label">Descrição</span>
+            <input class="filter" data-col="descricao" placeholder="filtrar descrição..." />
           </th>
+
           <th>
-            <div class="filter-wrap">
-              <div>Marca</div>
-              <input class="filter" data-col="marca" placeholder="filtrar marca...">
-            </div>
+            <span class="label">Marca</span>
+            <input class="filter" data-col="marca" placeholder="filtrar marca..." />
           </th>
+
           <th>
-            <div class="filter-wrap">
-              <div>Nº Série</div>
-              <input class="filter" data-col="n_serie" placeholder="filtrar série...">
-            </div>
+            <span class="label">Nº Série</span>
+            <input class="filter" data-col="n_serie" placeholder="filtrar série..." />
           </th>
+
           <th>
-            <div class="filter-wrap">
-              <div>Estado</div>
-              <input class="filter" data-col="estado" placeholder="filtrar estado...">
-            </div>
+            <span class="label">Estado</span>
+            <input class="filter" data-col="estado" placeholder="filtrar estado..." />
           </th>
-          <th>
-            Timestamp
-          </th>
-          <th style="width:150px">Ações</th>
+
+          <th><span class="label">Timestamp</span></th>
+          <th style="width:160px"><span class="label">Ações</span></th>
         </tr>
       </thead>
       <tbody id="tbody-inv"></tbody>
     </table>
   </div>
 
-  <div class="footer">
-    <div class="muted">Dica: use os filtros acima para localizar itens rapidamente</div>
+  <div class="footer" aria-hidden="false">
+    <div class="muted">Dica: filtros funcionam nas colunas carregadas</div>
     <div class="btn-row">
-      <button id="load-more" class="load-more" style="display:none">Ver mais</button>
-      <button id="view-all" class="load-more" style="display:none">Ver toda a tabela</button>
+      <button id="load-more" class="btn-surface" style="display:none">Ver mais</button>
+      <button id="view-all" class="btn-surface" style="display:none">Ver toda a tabela</button>
+      <button id="refresh" class="btn-primary" title="Recarregar">Recarregar</button>
     </div>
+  </div>
+</div>
+
+<!-- Modal de edição -->
+<div id="edit-modal-back" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal" role="document" aria-labelledby="edit-modal-title">
+    <h3 id="edit-modal-title">Editar item</h3>
+    <form id="edit-form" onsubmit="return false;">
+      <input type="hidden" id="edit-row-number" />
+      <div class="row">
+        <div class="col">
+          <label for="edit-unidade">Unidade</label>
+          <input id="edit-unidade" type="text" />
+        </div>
+        <div class="col">
+          <label for="edit-categoria">Categoria</label>
+          <input id="edit-categoria" type="text" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label for="edit-descricao">Descrição</label>
+          <textarea id="edit-descricao" rows="2"></textarea>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label for="edit-marca">Marca</label>
+          <input id="edit-marca" type="text" />
+        </div>
+        <div class="col">
+          <label for="edit-nserie">Nº Série</label>
+          <input id="edit-nserie" type="text" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label for="edit-estado">Estado</label>
+          <input id="edit-estado" type="text" />
+        </div>
+        <div class="col">
+          <label for="edit-timestamp">Timestamp</label>
+          <input id="edit-timestamp" type="text" disabled />
+        </div>
+      </div>
+
+      <div class="actions-row">
+        <button type="button" class="btn cancel" onclick="closeEditModal()">Cancelar</button>
+        <button type="button" class="btn save" onclick="submitEditModal()">Salvar</button>
+      </div>
+    </form>
   </div>
 </div>
 {% endblock %}
@@ -161,21 +263,30 @@
   let has_more = false;
   const MAX_PAGE = 200;
 
+  function showError(msg){ alert(msg); }
+
   async function fetchItems(initial = false, useLimit = limit){
-    const res = await fetch(`/api/items?offset=${offset}&limit=${useLimit}`);
-    if(!res.ok) return alert('Erro ao carregar itens');
-    const data = await res.json();
-    if(initial) items = data.items || []; else items = items.concat(data.items || []);
-    total = data.total || 0;
-    has_more = !!data.has_more;
-    updateUI();
+    const btnLoad = document.getElementById('load-more');
+    btnLoad?.classList.add('disabled');
+    try {
+      const res = await fetch(`/api/items?offset=${offset}&limit=${useLimit}`);
+      if(!res.ok) { showError('Erro ao carregar itens'); return; }
+      const data = await res.json();
+      if(initial) items = data.items || []; else items = items.concat(data.items || []);
+      total = data.total || 0;
+      has_more = !!data.has_more;
+      updateUI();
+    } catch (err) {
+      showError('Erro: ' + err.message);
+    } finally {
+      btnLoad?.classList.remove('disabled');
+    }
   }
 
   async function fetchAll(){
     const btnLoad = document.getElementById('load-more');
     const btnAll = document.getElementById('view-all');
-    btnLoad.classList.add('disabled'); btnAll.classList.add('disabled');
-    btnAll.textContent = 'Carregando...';
+    btnLoad.classList.add('disabled'); btnAll.classList.add('disabled'); btnAll.textContent = 'Carregando...';
     try {
       let all = [];
       let tempOffset = 0;
@@ -191,14 +302,12 @@
       offset = items.length;
       total = items.length;
       has_more = false;
-      // limpa filtros
       document.querySelectorAll('input.filter').forEach(i=>i.value='');
       updateUI();
     } catch (err) {
-      alert('Erro ao carregar toda a tabela: ' + err.message);
+      showError('Erro ao carregar toda a tabela: ' + err.message);
     } finally {
-      btnLoad.classList.remove('disabled'); btnAll.classList.remove('disabled');
-      btnAll.textContent = 'Ver toda a tabela';
+      btnLoad.classList.remove('disabled'); btnAll.classList.remove('disabled'); btnAll.textContent = 'Ver toda a tabela';
     }
   }
 
@@ -213,7 +322,7 @@
       btnAll.style.display = 'inline-block';
     } else {
       btn.style.display = 'none';
-      if(items.length < total) btnAll.style.display = 'inline-block'; else btnAll.style.display = 'none';
+      btnAll.style.display = items.length < total ? 'inline-block' : 'none';
     }
   }
 
@@ -231,7 +340,7 @@
         <td>${escapeHtml(it.n_serie)}</td>
         <td>${escapeHtml(it.estado)}</td>
         <td>${escapeHtml(it.timestamp)}</td>
-        <td class="actions"><button class="btn" onclick="editRow(${it.row_number})">Editar</button></td>
+        <td class="actions"><button class="btn" onclick="openEditModal(${it.row_number})">Editar</button></td>
       `;
       tbody.appendChild(tr);
     }
@@ -260,22 +369,90 @@
 
   document.getElementById('view-all').addEventListener('click', async ()=>{ await fetchAll(); });
 
-  async function editRow(rowNumber){
-    const item = items.find(i=>i.row_number==rowNumber);
-    if(!item) return alert('Item não encontrado');
-    const unidade = prompt('Unidade', item.unidade) || '';
-    const categoria = prompt('Categoria', item.categoria) || '';
-    const descricao = prompt('Descrição', item.descricao) || '';
-    const marca = prompt('Marca', item.marca) || '';
-    const n_serie = prompt('Nº Série', item.n_serie) || '';
-    const estado = prompt('Estado', item.estado) || '';
+  document.getElementById('refresh').addEventListener('click', async ()=>{
+    offset = 0;
+    await fetchItems(true);
+  });
 
-    const payload = { row_number: rowNumber, unidade, categoria, descricao, marca, n_serie, estado };
-    const res = await fetch('/api/update_row', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-    const data = await res.json();
-    if(res.ok && data.success){ alert('Atualizado com sucesso'); offset = 0; await fetchItems(true); }
-    else alert('Erro: ' + (data.error || 'falha ao atualizar'));
+  /* Modal functions */
+  function openEditModal(rowNumber){
+    const item = items.find(i => Number(i.row_number) === Number(rowNumber));
+    if(!item) return showError('Item não encontrado');
+    document.getElementById('edit-row-number').value = item.row_number;
+    document.getElementById('edit-unidade').value = item.unidade || '';
+    document.getElementById('edit-categoria').value = item.categoria || '';
+    document.getElementById('edit-descricao').value = item.descricao || '';
+    document.getElementById('edit-marca').value = item.marca || '';
+    document.getElementById('edit-nserie').value = item.n_serie || '';
+    document.getElementById('edit-estado').value = item.estado || '';
+    document.getElementById('edit-timestamp').value = item.timestamp || '';
+    const back = document.getElementById('edit-modal-back');
+    back.classList.add('show');
+    back.setAttribute('aria-hidden', 'false');
+    // focus first input
+    setTimeout(()=>document.getElementById('edit-unidade').focus(), 100);
   }
+
+  function closeEditModal(){
+    const back = document.getElementById('edit-modal-back');
+    back.classList.remove('show');
+    back.setAttribute('aria-hidden', 'true');
+  }
+
+  async function submitEditModal(){
+    const rowNumber = document.getElementById('edit-row-number').value;
+    const payload = {
+      row_number: Number(rowNumber),
+      unidade: document.getElementById('edit-unidade').value.trim(),
+      categoria: document.getElementById('edit-categoria').value.trim(),
+      descricao: document.getElementById('edit-descricao').value.trim(),
+      marca: document.getElementById('edit-marca').value.trim(),
+      n_serie: document.getElementById('edit-nserie').value.trim(),
+      estado: document.getElementById('edit-estado').value.trim()
+    };
+    // basic validation
+    if(!payload.row_number) return showError('Row inválido');
+    try {
+      const res = await fetch('/api/update_row', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if(res.ok && data.success){
+        // atualiza item na lista local e re-renderiza (sem recarregar tudo)
+        const idx = items.findIndex(i => Number(i.row_number) === Number(payload.row_number));
+        if(idx !== -1){
+          items[idx].unidade = payload.unidade;
+          items[idx].categoria = payload.categoria;
+          items[idx].descricao = payload.descricao;
+          items[idx].marca = payload.marca;
+          items[idx].n_serie = payload.n_serie;
+          items[idx].estado = payload.estado;
+          // timestamp será atualizado pelo servidor; recarregar pequeno trecho para garantir
+          await fetchItems(true);
+        } else {
+          await fetchItems(true);
+        }
+        closeEditModal();
+        alert('Atualizado com sucesso');
+      } else {
+        showError('Erro ao atualizar: ' + (data.error || res.statusText));
+      }
+    } catch (err) {
+      showError('Erro ao atualizar: ' + err.message);
+    }
+  }
+
+  // close modal when clicking backdrop
+  document.getElementById('edit-modal-back').addEventListener('click', (e)=>{
+    if(e.target === e.currentTarget) closeEditModal();
+  });
+
+  // keyboard escape to close
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape') closeEditModal();
+  });
 
   (async ()=>{ offset = 0; await fetchItems(true); })();
 </script>
