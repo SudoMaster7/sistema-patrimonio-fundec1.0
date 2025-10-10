@@ -42,12 +42,11 @@ def api_items():
         sheet = get_sheet()
         all_values = sheet.get_all_values()
         if not all_values:
-            return jsonify(items=[])
+            return jsonify(items=[], total=0, has_more=False)
         headers = all_values[0]
         rows = all_values[1:]
         items = []
         for idx, row in enumerate(rows, start=2):  # row 1 = headers, dados iniciam em 2
-            # Garante que o row tenha o mesmo tamanho dos headers
             padded = row + [""] * (len(headers) - len(row))
             item = {
                 "row_number": idx,
@@ -60,7 +59,25 @@ def api_items():
                 "timestamp": padded[6] if len(padded) > 6 else ""
             }
             items.append(item)
-        return jsonify(items=items)
+
+        # Ordena do mais recente para o mais antigo (últimos adicionados primeiro)
+        items.reverse()
+        total = len(items)
+
+        # Paginação simples: offset e limit (offset em itens mais recentes)
+        try:
+            limit = max(1, min(200, int(request.args.get('limit', 20))))
+        except:
+            limit = 20
+        try:
+            offset = max(0, int(request.args.get('offset', 0)))
+        except:
+            offset = 0
+
+        slice_items = items[offset: offset + limit]
+        has_more = (offset + limit) < total
+
+        return jsonify(items=slice_items, total=total, offset=offset, limit=limit, has_more=has_more)
     except gspread.exceptions.SpreadsheetNotFound:
         return jsonify(error="Planilha não encontrada"), 404
     except Exception as e:

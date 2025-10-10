@@ -3,44 +3,104 @@
 <head>
   <meta charset="utf-8">
   <title>Inventário</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 6px; }
-    th { background: #f4f4f4; position: sticky; top: 0; }
-    input.filter { width: 100%; box-sizing: border-box; }
-    .btn { padding: 4px 8px; cursor: pointer; }
+    :root{
+      --bg:#f7f9fb; --card:#ffffff; --muted:#6b7280; --accent:#2563eb;
+      --border:#e6eef8;
+    }
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial; background:var(--bg); margin:0; padding:24px; color:#111827}
+    .container{max-width:1200px; margin:0 auto}
+    h1{margin:0 0 12px 0; font-size:20px}
+    .card{background:var(--card); border:1px solid var(--border); border-radius:8px; padding:16px; box-shadow:0 1px 2px rgba(2,6,23,0.04)}
+    .controls{display:flex; gap:12px; align-items:center; margin-bottom:12px; flex-wrap:wrap}
+    .info{color:var(--muted); font-size:14px}
+    .table-wrap{overflow:auto; border-radius:6px; border:1px solid var(--border)}
+    table{width:100%; border-collapse:collapse; min-width:900px}
+    thead th{position:sticky; top:0; background:linear-gradient(180deg,#fff,#fafcff); z-index:2; text-align:left; padding:10px 12px; font-size:13px; color:#111827; border-bottom:1px solid var(--border)}
+    tbody td{padding:10px 12px; font-size:14px; border-bottom:1px solid #f1f5f9; vertical-align:top}
+    tbody tr:nth-child(even){background:#fbfdff}
+    .row-num{width:64px; color:var(--muted)}
+    input.filter{width:100%; padding:6px 8px; border:1px solid #e6eef8; border-radius:6px; background:#fff}
+    .actions .btn{background:var(--accent); color:white; border:none; padding:6px 8px; border-radius:6px; cursor:pointer; font-size:13px}
+    .actions .btn.secondary{background:#fff; color:var(--accent); border:1px solid var(--accent)}
+    .footer{display:flex; justify-content:space-between; align-items:center; margin-top:12px}
+    .load-more{background:#fff; border:1px solid var(--border); padding:8px 12px; border-radius:6px; cursor:pointer}
+    @media (max-width:720px){
+      thead th, tbody td{font-size:13px; padding:8px}
+      .controls{flex-direction:column; align-items:stretch}
+    }
   </style>
 </head>
 <body>
-  <h1>Inventário</h1>
+  <div class="container">
+    <h1>Inventário</h1>
+    <div class="card">
+      <div class="controls">
+        <div class="info">Mostrando os últimos <strong id="shown-count">0</strong> de <strong id="total-count">0</strong> itens</div>
+        <div style="flex:1"></div>
+        <div class="info">Filtros rápidos (cada coluna)</div>
+      </div>
 
-  <p>Use os filtros em cada coluna para buscar. Clique em "Editar" para alterar a linha sem abrir o Google Sheets.</p>
+      <div class="table-wrap">
+        <table id="table-inv">
+          <thead>
+            <tr id="header-row">
+              <th class="row-num">Row</th>
+              <th>Unidade<br><input class="filter" data-col="unidade" placeholder="filtrar..."></th>
+              <th>Categoria<br><input class="filter" data-col="categoria" placeholder="filtrar..."></th>
+              <th>Descrição<br><input class="filter" data-col="descricao" placeholder="filtrar..."></th>
+              <th>Marca<br><input class="filter" data-col="marca" placeholder="filtrar..."></th>
+              <th>Nº Série<br><input class="filter" data-col="n_serie" placeholder="filtrar..."></th>
+              <th>Estado<br><input class="filter" data-col="estado" placeholder="filtrar..."></th>
+              <th>Timestamp</th>
+              <th style="width:120px">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-inv"></tbody>
+        </table>
+      </div>
 
-  <table id="table-inv">
-    <thead>
-      <tr id="header-row">
-        <th>Row</th>
-        <th>Unidade<br><input class="filter" data-col="unidade" placeholder="filtrar..."></th>
-        <th>Categoria<br><input class="filter" data-col="categoria" placeholder="filtrar..."></th>
-        <th>Descrição<br><input class="filter" data-col="descricao" placeholder="filtrar..."></th>
-        <th>Marca<br><input class="filter" data-col="marca" placeholder="filtrar..."></th>
-        <th>Nº Série<br><input class="filter" data-col="n_serie" placeholder="filtrar..."></th>
-        <th>Estado<br><input class="filter" data-col="estado" placeholder="filtrar..."></th>
-        <th>Timestamp</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody id="tbody-inv"></tbody>
-  </table>
+      <div class="footer">
+        <div></div>
+        <div>
+          <button id="load-more" class="load-more" style="display:none">Ver mais</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
-    let items = [];
+    let items = []; // itens carregados (mais recentes primeiro)
+    let offset = 0;
+    const limit = 20;
+    let total = 0;
+    let has_more = false;
 
-    async function fetchItems(){
-      const res = await fetch('/api/items');
+    async function fetchItems(initial = false){
+      const res = await fetch(`/api/items?offset=${offset}&limit=${limit}`);
+      if(!res.ok) return alert('Erro ao carregar itens');
       const data = await res.json();
-      items = data.items || [];
+      if(initial){
+        items = data.items || [];
+      } else {
+        items = items.concat(data.items || []);
+      }
+      total = data.total || 0;
+      has_more = !!data.has_more;
+      updateUI();
+    }
+
+    function updateUI(){
       renderTable(items);
+      document.getElementById('shown-count').textContent = items.length;
+      document.getElementById('total-count').textContent = total;
+      const btn = document.getElementById('load-more');
+      if(has_more){
+        btn.style.display = 'inline-block';
+      } else {
+        btn.style.display = 'none';
+      }
     }
 
     function renderTable(list){
@@ -49,7 +109,7 @@
       for(const it of list){
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${it.row_number}</td>
+          <td class="row-num">${it.row_number}</td>
           <td>${escapeHtml(it.unidade)}</td>
           <td>${escapeHtml(it.categoria)}</td>
           <td>${escapeHtml(it.descricao)}</td>
@@ -57,7 +117,7 @@
           <td>${escapeHtml(it.n_serie)}</td>
           <td>${escapeHtml(it.estado)}</td>
           <td>${escapeHtml(it.timestamp)}</td>
-          <td><button class="btn" data-row="${it.row_number}" onclick="editRow(${it.row_number})">Editar</button></td>
+          <td class="actions"><button class="btn" onclick="editRow(${it.row_number})">Editar</button></td>
         `;
         tbody.appendChild(tr);
       }
@@ -82,12 +142,15 @@
       if(e.target.matches('input.filter')) applyFilters();
     });
 
+    document.getElementById('load-more').addEventListener('click', async ()=>{
+      if(!has_more) return;
+      offset += limit;
+      await fetchItems(false);
+    });
+
     async function editRow(rowNumber){
-      // Busca item atual
       const item = items.find(i=>i.row_number==rowNumber);
       if(!item) return alert('Item não encontrado');
-
-      // Simples prompt para cada campo (pode trocar por modal)
       const unidade = prompt('Unidade', item.unidade) || '';
       const categoria = prompt('Categoria', item.categoria) || '';
       const descricao = prompt('Descrição', item.descricao) || '';
@@ -95,10 +158,7 @@
       const n_serie = prompt('Nº Série', item.n_serie) || '';
       const estado = prompt('Estado', item.estado) || '';
 
-      const payload = {
-        row_number: rowNumber,
-        unidade, categoria, descricao, marca, n_serie, estado
-      };
+      const payload = { row_number: rowNumber, unidade, categoria, descricao, marca, n_serie, estado };
 
       const res = await fetch('/api/update_row', {
         method: 'POST',
@@ -109,14 +169,19 @@
       const data = await res.json();
       if(res.ok && data.success){
         alert('Atualizado com sucesso');
-        await fetchItems();
+        // Recarrega desde o início para garantir sincronia
+        offset = 0;
+        await fetchItems(true);
       } else {
         alert('Erro: ' + (data.error || 'falha ao atualizar'));
       }
     }
 
-    // Carrega itens ao abrir
-    fetchItems();
+    // Carrega primeiros 20 (mais recentes)
+    (async ()=>{
+      offset = 0;
+      await fetchItems(true);
+    })();
   </script>
 </body>
 </html>
