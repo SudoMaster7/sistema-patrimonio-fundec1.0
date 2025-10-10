@@ -67,10 +67,6 @@
             <a class="navbar-brand" href="{{ url_for('index') }}">
                 <img src="{{ url_for('static', filename='icone.png') }}" alt="Logo da SUDO" height="30" class="d-inline-block align-text-top me-2">
                 Patrimônio FUNDEC</a>
-            <button class="btn btn-outline-light ms-auto" id="theme-toggle">
-                <i class="bi bi-sun-fill theme-icon-sun"></i>
-                <i class="bi bi-moon-stars-fill theme-icon-moon d-none"></i>
-            </button>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -84,6 +80,10 @@
                     </li>
                 </ul>
             </div>
+            <button class="btn btn-outline-light ms-auto" id="theme-toggle">
+                <i class="bi bi-sun-fill theme-icon-sun"></i>
+                <i class="bi bi-moon-stars-fill theme-icon-moon d-none"></i>
+            </button>
         </div>
     </nav>
 
