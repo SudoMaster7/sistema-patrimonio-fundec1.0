@@ -25,10 +25,13 @@
     .actions .btn{background:var(--accent); color:white; border:none; padding:6px 8px; border-radius:6px; cursor:pointer; font-size:13px}
     .actions .btn.secondary{background:#fff; color:var(--accent); border:1px solid var(--accent)}
     .footer{display:flex; justify-content:space-between; align-items:center; margin-top:12px}
-    .load-more{background:#fff; border:1px solid var(--border); padding:8px 12px; border-radius:6px; cursor:pointer}
+    .load-more{background:#fff; border:1px solid var(--border); padding:8px 12px; border-radius:6px; cursor:pointer; margin-left:8px}
+    .btn-row {display:flex; gap:8px; align-items:center}
+    .disabled {opacity:0.6; pointer-events:none}
     @media (max-width:720px){
       thead th, tbody td{font-size:13px; padding:8px}
       .controls{flex-direction:column; align-items:stretch}
+      .btn-row{flex-direction:column; align-items:flex-end}
     }
   </style>
 </head>
@@ -63,8 +66,9 @@
 
       <div class="footer">
         <div></div>
-        <div>
+        <div class="btn-row">
           <button id="load-more" class="load-more" style="display:none">Ver mais</button>
+          <button id="view-all" class="load-more" style="display:none">Ver toda a tabela</button>
         </div>
       </div>
     </div>
@@ -76,9 +80,10 @@
     const limit = 20;
     let total = 0;
     let has_more = false;
+    const MAX_PAGE = 200; // usa 200 para páginas quando precisar carregar tudo
 
-    async function fetchItems(initial = false){
-      const res = await fetch(`/api/items?offset=${offset}&limit=${limit}`);
+    async function fetchItems(initial = false, useLimit = limit){
+      const res = await fetch(`/api/items?offset=${offset}&limit=${useLimit}`);
       if(!res.ok) return alert('Erro ao carregar itens');
       const data = await res.json();
       if(initial){
@@ -91,15 +96,56 @@
       updateUI();
     }
 
+    async function fetchAll(){
+      // desabilita botões enquanto carrega
+      const btnLoad = document.getElementById('load-more');
+      const btnAll = document.getElementById('view-all');
+      btnLoad.classList.add('disabled'); btnAll.classList.add('disabled');
+      btnAll.textContent = 'Carregando...';
+
+      try {
+        let all = [];
+        let tempOffset = 0;
+        while (true) {
+          const res = await fetch(`/api/items?offset=${tempOffset}&limit=${MAX_PAGE}`);
+          if(!res.ok) throw new Error('Erro ao carregar página');
+          const data = await res.json();
+          all = all.concat(data.items || []);
+          if(!data.has_more) break;
+          tempOffset += MAX_PAGE;
+        }
+        items = all;
+        offset = items.length; // marca como já carregado
+        total = items.length;
+        has_more = false;
+        updateUI();
+        // limpa filtros se houver (opcional)
+        document.querySelectorAll('input.filter').forEach(i=>i.value='');
+      } catch (err) {
+        alert('Erro ao carregar toda a tabela: ' + err.message);
+      } finally {
+        btnLoad.classList.remove('disabled'); btnAll.classList.remove('disabled');
+        btnAll.textContent = 'Ver toda a tabela';
+      }
+    }
+
     function updateUI(){
       renderTable(items);
       document.getElementById('shown-count').textContent = items.length;
       document.getElementById('total-count').textContent = total;
       const btn = document.getElementById('load-more');
+      const btnAll = document.getElementById('view-all');
       if(has_more){
         btn.style.display = 'inline-block';
+        btnAll.style.display = 'inline-block';
       } else {
         btn.style.display = 'none';
+        // Se total for maior que já carregado, ainda ofereça "Ver toda a tabela"
+        if(items.length < total){
+          btnAll.style.display = 'inline-block';
+        } else {
+          btnAll.style.display = 'none';
+        }
       }
     }
 
@@ -146,6 +192,10 @@
       if(!has_more) return;
       offset += limit;
       await fetchItems(false);
+    });
+
+    document.getElementById('view-all').addEventListener('click', async ()=>{
+      await fetchAll();
     });
 
     async function editRow(rowNumber){
